@@ -1,4 +1,5 @@
-# Mi Día -> https://jmcoromore-cpu.github.io/MI-DIA/
+# Mi Día
+🔗 **Probar la app:** https://jmcoromore-cpu.github.io/MI-DIA/
 
 Organizador personal en **un solo archivo HTML**, sin dependencias, sin servidor y sin build. Funciona offline, se instala como app en el iPhone y guarda todo en el propio dispositivo. Reúne cuatro herramientas en una: agenda diaria/semanal, lista de pendientes, seguimiento de hábitos por áreas de vida y resumen mensual, con sincronización de los calendarios de iCloud.
 
