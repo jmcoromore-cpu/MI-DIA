@@ -8,7 +8,7 @@ Organizador personal en **un solo archivo HTML**, sin dependencias, sin servidor
 
 La app tiene cuatro secciones, accesibles desde la barra inferior:
 
-### 📅 Organización
+###  Organización
 Agenda del día en formato de tira horaria (timeline), con los eventos colocados por hora y solapamientos repartidos en carriles automáticamente. Una línea roja marca la hora actual. Cambia a **vista semana** para ver los siete días de un vistazo y planificar el domingo. Los eventos se marcan como hechos con un toque y muestran una barra de progreso del día.
 
 **Entrada rápida en lenguaje natural:** escribe (o dicta) frases como:
@@ -20,13 +20,13 @@ Agenda del día en formato de tira horaria (timeline), con los eventos colocados
 
 La app interpreta fecha, hora y título, y abre la actividad ya rellenada para que la revises y guardes. El **micrófono** (Web Speech API) permite dictar la actividad en Safari.
 
-### ✅ Hacer
+###  Hacer
 Lista de pendientes sin fecha. Al marcar uno, se tacha y desaparece con animación. Con el botón 📅 conviertes un pendiente en una actividad planificada en el día que elijas.
 
-### 🔷 Día a día
-Un **heptágono/radar** con siete áreas de la vida —Pareja ❤️, Amigos 🍻, Familia 🏠, Deporte 💪, Comida 🥗, Meditar 🧘 y Aprender 📚— que valoras de **1 a 5** cada día. La forma del radar se expande según tus notas. Cuando valoras las 7 áreas, se enciende una **racha** 🔥 de días completos.
+###  Día a día
+Un **heptágono/radar** con siete áreas de la vida  que valoras de **1 a 5** cada día. La forma del radar se expande según tus notas. Cuando valoras las 7 áreas, se enciende una **racha** de días completos.
 
-### 📊 Resumen
+### Resumen
 Vista mensual con una rejilla tipo calendario por cada área: la intensidad del color refleja la nota (1–5), se ve la racha por hábito y el total de puntos del mes. Puedes tocar cualquier día para corregir su valoración.
 
 ## Calendarios de iCloud
