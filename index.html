@@ -280,6 +280,28 @@ nav.bottom button:active svg{transform:scale(.85)}
   padding:30px 20px;background:var(--card);border:1px dashed var(--line);border-radius:var(--r);
 }
 .empty b{display:block;font-size:1.5rem;margin-bottom:6px}
+/* secciones desplegables de Hacer */
+.tsec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-top:10px;overflow:hidden}
+.tsec-head{display:flex;align-items:center;gap:6px;padding:3px 6px 3px 4px}
+.tsec-toggle{flex:1;display:flex;align-items:center;gap:8px;padding:10px 6px;text-align:left;min-width:0}
+.tsec-toggle .arrow{width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex-shrink:0}
+.tsec.collapsed .arrow{transform:rotate(-90deg)}
+.tsec-name{font-weight:800;font-size:.93rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsec-count{font-size:.68rem;font-weight:800;color:var(--acc);background:var(--acc-dim);padding:2px 8px;border-radius:99px;flex-shrink:0}
+.tsec-del{width:32px;height:32px;border-radius:9px;color:var(--faint);font-weight:800;flex-shrink:0}
+.tsec-del:active{color:var(--danger);background:rgba(224,82,82,.12)}
+.tsec-body{display:flex;flex-direction:column;gap:7px;padding:0 10px 10px}
+.tsec.collapsed .tsec-body{display:none}
+.tsec-body .todo{background:var(--card2)}
+.tsec-empty{font-size:.76rem;color:var(--faint);font-weight:600;padding:2px 4px}
+.tsec-add{display:flex;gap:7px;align-items:center;border:1px dashed var(--input-bd);border-radius:12px;padding:5px 5px 5px 10px}
+.tsec-add input{flex:1;border:0;background:transparent;outline:none;font-size:.88rem;min-width:0}
+.tsec-add input::placeholder{color:var(--faint)}
+.tsec-add button{width:32px;height:32px;border-radius:9px;background:var(--acc-dim);color:var(--acc);font-weight:800;font-size:1.1rem;flex-shrink:0}
+.sec-add{display:flex;gap:7px;align-items:center;margin-top:14px;border:1.5px dashed var(--input-bd);border-radius:14px;padding:6px 6px 6px 12px}
+.sec-add input{flex:1;border:0;background:transparent;outline:none;font-size:.9rem;min-width:0}
+.sec-add input::placeholder{color:var(--faint)}
+.sec-add button{height:36px;padding:0 14px;border-radius:10px;background:var(--acc-dim);color:var(--acc);font-weight:800;font-size:.83rem;flex-shrink:0}
 
 /* ============ DÍA A DÍA (heptágono + valoración 1-5) ============ */
 .hepta-card{
@@ -485,11 +507,18 @@ nav.bottom button:active svg{transform:scale(.85)}
   <section class="tab" id="tab-todo">
     <h2 class="sec">Hacer</h2>
     <p class="sub">Apunta lo pendiente. Márcalo y desaparece, o pásalo a un día con 📅.</p>
-    <div class="todo-add">
-      <input type="text" id="todoInput" placeholder="Añadir pendiente…" enterkeyhint="done" maxlength="120">
-      <button id="todoAdd">+</button>
+    <div id="todoWrap">
+      <div class="todo-add">
+        <input type="text" id="todoInput" placeholder="Añadir pendiente rápido…" enterkeyhint="done" maxlength="120">
+        <button id="todoAdd">+</button>
+      </div>
+      <div class="todo-list" id="todoList"></div>
+      <div id="sectionList"></div>
+      <div class="sec-add">
+        <input type="text" id="secInput" placeholder="Nueva sección (p. ej. Fabricación)" enterkeyhint="done" maxlength="60">
+        <button id="secAdd">Crear sección</button>
+      </div>
     </div>
-    <div class="todo-list" id="todoList"></div>
   </section>
 
   <!-- ============ DÍA A DÍA ============ -->
@@ -639,7 +668,7 @@ const CAL_PALETTE=['#a78bfa','#f09b4c','#54a4f5','#4ecb71','#ee5d78','#3fc5dd','
 
 /* ---------- estado persistente ---------- */
 const KEY='miDia.v1';
-const DEF={events:{},todos:[],habits:{},calDone:{},calOcc:[],settings:{icsUrls:[],lastSync:0}};
+const DEF={events:{},todos:[],sections:[],habits:{},calDone:{},calOcc:[],settings:{icsUrls:[],lastSync:0}};
 let S;
 try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=JSON.parse(JSON.stringify(DEF))}
 for(const k in DEF){if(S[k]===undefined)S[k]=DEF[k]}
@@ -1139,18 +1168,41 @@ $('#quickInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDef
 /* ==================================================
    HACER (pendientes)
 ================================================== */
+const ARROW='<svg class="arrow" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+const sectionExists=id=>S.sections.some(s=>s.id===id);
+function todoRow(t){
+  return '<div class="todo" data-id="'+t.id+'">'+
+    '<button class="chk">✓</button>'+
+    '<span class="txt">'+esc(t.text)+'</span>'+
+    '<button class="plan" title="Planificar en un día">📅</button>'+
+  '</div>';
+}
 function renderTodos(){
-  const list=$('#todoList');
-  if(!S.todos.length){
-    list.innerHTML='<div class="empty"><b>·</b>Nada pendiente.<br>Lo que apuntes aquí te espera hasta que lo marques.</div>';
-    return;
-  }
-  list.innerHTML=S.todos.map(t=>
-    '<div class="todo" data-id="'+t.id+'">'+
-      '<button class="chk">✓</button>'+
-      '<span class="txt">'+esc(t.text)+'</span>'+
-      '<button class="plan" title="Planificar en un día">📅</button>'+
-    '</div>').join('');
+  /* pendientes sueltos (sin sección) */
+  const loose=S.todos.filter(t=>!t.sectionId||!sectionExists(t.sectionId));
+  $('#todoList').innerHTML=loose.length
+    ?loose.map(todoRow).join('')
+    :(S.sections.length?'':'<div class="empty"><b>·</b>Nada pendiente.<br>Apunta algo arriba o crea una sección (p. ej. una asignatura).</div>');
+  /* secciones desplegables */
+  $('#sectionList').innerHTML=S.sections.map(sec=>{
+    const items=S.todos.filter(t=>t.sectionId===sec.id);
+    return '<div class="tsec'+(sec.collapsed?' collapsed':'')+'" data-sec="'+sec.id+'">'+
+      '<div class="tsec-head">'+
+        '<button class="tsec-toggle" title="Mostrar / ocultar">'+ARROW+
+          '<span class="tsec-name">'+esc(sec.name)+'</span>'+
+          '<span class="tsec-count">'+items.length+'</span>'+
+        '</button>'+
+        '<button class="tsec-del" title="Eliminar sección">✕</button>'+
+      '</div>'+
+      '<div class="tsec-body">'+
+        (items.length?items.map(todoRow).join(''):'<div class="tsec-empty">Sin tareas en esta sección.</div>')+
+        '<div class="tsec-add">'+
+          '<input type="text" placeholder="Añadir a '+esc(sec.name)+'…" enterkeyhint="done" maxlength="120">'+
+          '<button title="Añadir">+</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
 }
 function addTodo(){
   const inp=$('#todoInput'),v=inp.value.trim();
@@ -1158,9 +1210,52 @@ function addTodo(){
   S.todos.unshift({id:uid(),text:v});
   save();inp.value='';renderTodos();
 }
+function addToSection(secId,inp){
+  const v=inp.value.trim();
+  if(!v)return;
+  S.todos.push({id:uid(),text:v,sectionId:secId});
+  save();renderTodos();
+  const again=$('[data-sec="'+secId+'"] .tsec-add input');
+  if(again)again.focus();
+}
+function addSection(){
+  const inp=$('#secInput'),name=inp.value.trim();
+  if(!name)return;
+  if(S.sections.some(s=>s.name.toLowerCase()===name.toLowerCase())){toast('Ya existe una sección con ese nombre');return}
+  S.sections.push({id:uid(),name:name,collapsed:false});
+  save();inp.value='';renderTodos();
+  toast('Sección «'+name+'» creada');
+}
 $('#todoAdd').onclick=addTodo;
 $('#todoInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTodo()}});
-$('#todoList').addEventListener('click',e=>{
+$('#secAdd').onclick=addSection;
+$('#secInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSection()}});
+/* acciones de secciones: plegar, borrar, añadir dentro */
+$('#sectionList').addEventListener('click',e=>{
+  const sec=e.target.closest('.tsec');if(!sec)return;
+  const s=S.sections.find(x=>x.id===sec.dataset.sec);if(!s)return;
+  if(e.target.closest('.tsec-toggle')){
+    s.collapsed=!s.collapsed;save();renderTodos();return;
+  }
+  if(e.target.closest('.tsec-del')){
+    const n=S.todos.filter(t=>t.sectionId===s.id).length;
+    if(confirm('¿Eliminar la sección «'+s.name+'»'+(n?' y sus '+n+' tarea'+(n>1?'s':''):'')+'?')){
+      S.sections=S.sections.filter(x=>x.id!==s.id);
+      S.todos=S.todos.filter(t=>t.sectionId!==s.id);
+      save();renderTodos();toast('Sección eliminada');
+    }
+    return;
+  }
+  const addBtn=e.target.closest('.tsec-add button');
+  if(addBtn)addToSection(s.id,addBtn.parentNode.querySelector('input'));
+});
+$('#sectionList').addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!e.target.closest('.tsec-add'))return;
+  e.preventDefault();
+  addToSection(e.target.closest('.tsec').dataset.sec,e.target);
+});
+/* marcar / planificar (sueltos y de secciones) */
+$('#todoWrap').addEventListener('click',e=>{
   const row=e.target.closest('.todo');if(!row)return;
   const id=row.dataset.id,todo=S.todos.find(t=>t.id===id);
   if(!todo)return;
